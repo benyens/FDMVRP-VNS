@@ -49,6 +49,7 @@ The rest of this document is organized as follows. Section II reviews the academ
 The Flexible-depot Multi-Trip Vehicle Routing Problem (FDMVRP) combines three core logistical operational dimensions: multi-trip scheduling, flexible inter-depot replenishment, and metaheuristic optimizatoin. This section reviews four foundational and state-of-the-art studies that address these specific features.
 
 \subsection{Multi-Trip Foundations - Taillard, Laporte, and Gendrau (1996).}
+\textit{\cite{taillard1996vehicle}}
 
 \subsubsection{Technique Used}
 The autors developed a trajectory-based hybrid metaheuristic for the Multi-Trip Vehicle Routing Problem (MTVRP) \cite{taillard1996vehicle}. The methodology combines a Tabu Search algorithm for route generation with a Set Partitioning / Bin Packing optimization formulation.
@@ -66,20 +67,78 @@ The framework was evaluated on 14 classic benchmark datasets adapted from Christ
 The study proved that allowing vehicles to execute multiple trips per shift signicantly reduces fleet acquisition costs and eliminates unutilized capacity \cite{taillard1996vehicle}. A key conclusion was that temporal bin-packing constraints dominate solution feasibility in multi-trip routing, meaning standard single-trip VRP operators are insufficient unless paired with explicit trip-level scheduling.
 
 \subsection{Inter-Depot Flexible Replenishmet - Crevier, Cordeau, and Laporte (2007).}
+\textit{\cite{crevier2007multi}}
 
 \subsubsection{Technique Used}
 The authors formalized the Multi-Depot Vehicle Routing Problem with Inter-Depot Routes (MDVRPI) \cite{crevier2007multi}. They proposed a matheuristic (hybrid metaheuristic) integrating Adaptative Memory Programming, Tabu Search, and Integer Programming. 
 
 \subsubsection{Main Components and Objectives}
-\begin{itemize}
+\begin{enumerate}
     \item \textbf{\textit{Adaptive Memory Matrix:}} Maintains a dynamic pool of high-quality route segments extracted from top-performing solutions. \textbf{\textit{Objective:}} To encourage search diversification by recombining promising sub-routes across different facilities.
 
     \item \textbf{\textit{Tabu Search Local Search Module:}} Executes neighborhood moves (relocate, swap, 2-opt) while permitting vehicles to insert intermediate facility visits when vehicle capacity is depleted. \textbf{\textit{Objective:}} To explore local solution spaces and dynamically determine inter-depot reloading locations.
 
     \item \textbf{\textit{Set Partitioning Subproblem:}} Solves an Integer Program over the stored route pool.\textbf{\textit{Objective:}} To assemble globally optimal combinations of routes and facility transtions.
-\end{itemize}
+\end{enumerate}
 
 \subsubsection{Instances Used and Characteristics}
+The authors tested 16 benchmark instances adapted from Cordeau's multi-depot dataset, containing between 48 and 288 customers distributed across 2 to 9 depor locations \cite{crevier2007multi}. The instances featured tight vehicle capacity limits ($Q$) and route duration constraints that required vehicles to execute intermediate replenishmente.
+
+\subsubsection{Results and Conclusions}
+The experiments demonstrated that allowing vehicles to make intermediate visits to reload cargo significantly outperforms traditional rigid multi-depot setups \cite{crevier2007multi}. The approach produced substantial reductions in total travel distance and required fleet size, providing a clear operational foundation for flexible inter-depot routing.
+
+\subsection{Hybrid VNS for Multi-Depot Systems - Sadati and Çatay (2021).}
+\cite{sadati2021hybrid}
+
+\subsubsection{Technique Used}
+The authors designed a Hybrid Variable Neighborhood Search (VNS) metaheuristic to solve a complex multi-depot routing problem \cite{sadati2021hybrid}. This methodology is classified as a population-informed trajectory metaheuristic that combines hierarchical VNS operators with Variable Neighborhood Descent (VND).
+
+\subsubsection{Main Components and Objectives}
+\begin{enumerate}
+    \item \textbf{\textit{Constructive Heuristic:}} Uses a distance-and-savings insertion procedure. \textit{\textbf{Objective:}} To quicly construct a feasible initial assignment of costumers to depots and routes.
+    
+    \item \textbf{\textit{Hierarchical Shaking Phase ($\mathcal{N}_k$):}} Applies shaking operators split into facility-level moves (depot reassignments) and route-level moves (trip exchange, customer shift).
+    \textbf{\textit{Objective:}} To perturb the solution structure systematically and escape local optimal traps.
+
+    \item \textbf{\textit{Variable Neighborhood Descent (VND):}} Executes deterministic local search moves, including 2-opt within routes and relocate/swap between routes \cite{sadati2021hybrid}.
+    \textbf{\textit{Objective:}} To intensify the search around promising solution regoins until reaching a local minimum.
+
+\end{enumerate}
+
+\subsubsection{Instances Used and Characteristics}
+The algorithm was evaluated on standar multi-depot benchmark instances ranging from 46 to 360 customer nodes and 2 to 9 depot hubs \cite{sadati2021hybrid}. The datasets included diverse customer spatial distributions (random, clustered, and hybrid patterns) under varying fleet capacity constraints.
+
+\subsubsection{Results and Conclusions}
+The hybrid VNS achieved state-of-the-art solution quality and faster convergence rates compared to standard Genetic Algorithms and Tabu Search \cite{sadati2021hybrid}. The authors concluded that structuring VNS operators hierarchically, separating facility reassingnment from customer routing, is essential for efficiently solving multi-depot problems.
+
+\subsection{Flexible Transshipment and Facility Sharing - Li, Chen, and Wang (2026).}
+\textit{\cite{li2026multidepot}}
+
+\subsubsection{Technique Used}
+The authores studied a collaborative multi-depot routing problem featuring flexible transshipment and shared parcel facilities \cite{li2026multidepot}}. 
+They developed and Adaptive Large Neighborhood Search (ALNS) metaheuristic classified as an adaptive destruction-and-repair framework.
+
+\subsubsection{Main Components and Objectives}
+\begin{enumerate}
+    \item \textbf{\textit{Destroy Operators (Ruin Phase): }} Applies Shaw Removal, Random Removal, and Worst Removal operators.
+    \textbf{\textit{Objective:}} To strategically remove selected customer visits and break suboptimal route structures.
+
+    \item \textbf{\textit{Repair Operators (Reconstruction Phase):}} Uses Greedy Insertion, Regret Insertion, and Flexible Transshipment Node Insertion \cite{li2026multidepot}.
+    \textbf{\textit{Objective:}} To reinsert unassigned orders while optimizing facility transshipment choices.
+
+    \item \textbf{\textit{Adaptive Weight Adjustment (Roulette Wheel):}} Dynamically updates operator selection probabilities based on past performance.
+    \textbf{\textit{Objective:}} To maintain a balance between global exploration and local exploitation troughout the search.
+
+\end{enumerate}
+
+\subsubsection{Instances Used and Characteristics}
+The study used benchmark instances ranging from 50 to 400 customer nodes across 3 to 10 depot hubs and shared lockers \cite{li2026multidepot}.
+The instances captured high-density urban parcel delivery conditions with flexible pickup and delivery points.
+
+\subsubsection{Results and Conclusions}
+The computational results showed that facility sharing and flexble transshipment reduce total operational costs by an aberage of 12.69\% (up to 24.44\% in dense networks) and decraese active fleet size by 17.6\% \cite{li2026multidepot}.
+These findings offer strong empirical support for flexible depot assignment, proving that eliminating rigid facility ownership eliminates unnecessary deadhead travel in city logistics.
+
 \section*{Acknowledgment}
 
 The preferred spelling of the word ``acknowledgment'' in America is without 
