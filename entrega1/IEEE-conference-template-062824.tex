@@ -1,0 +1,115 @@
+\documentclass[conference]{IEEEtran}
+\IEEEoverridecommandlockouts
+% The preceding line is only needed to identify funding in the first footnote. If that is unneeded, please comment it out.
+%Template version as of 6/27/2024
+
+\usepackage{cite}
+\usepackage{amsmath,amssymb,amsfonts}
+\usepackage{algorithmic}
+\usepackage{graphicx}
+\usepackage{textcomp}
+\usepackage{xcolor}
+\def\BibTeX{{\rm B\kern-.05em{\sc i\kern-.025em b}\kern-.08em
+    T\kern-.1667em\lower.7ex\hbox{E}\kern-.125emX}}
+\begin{document}
+
+\title{Mathematical Formulation and State of the Art Review for the Flexible-Depot Multi-Trip Vehicle Routing Problem}
+
+\author{\IEEEauthorblockN{Benjam\'in Renzo Ferrada Larach}
+\IEEEauthorblockA{\textit{Departamento de Informatica} \\
+\textit{Universidad T\'ecnica Federico Santa Mar\'ia}\\
+Valpara\'iso, Chile \\
+benjamin.ferradal@usm.cl}
+}
+
+\maketitle
+
+\begin{abstract}
+Urban freight transportation and last-mile distribution networks face pressing operational challenges due to strict vehicle payload limits, customer time commitments, and driver working shift restrictions. The Flexible-depot Multi-trip Vehicle Routing Problem (FDMVRP) extends the classical Vehicle Routing Problem (VRP) by simultaneously addressing two critical real-world features: vehicles can execute multiple sequential distribution journeys within their daily work shift, and depots possess flexible operational boundaries, allowing a vehicle to conclude a trip at a different depot from which it originated to replenish cargo for its next assignment. This report presents a formal, comprehensive Mixed-Integer Linear Programming (MILP) formulation for the FDMVRP, detailing customer coverage, flow conservation, flexible depot assignment, multi-trip spatial and temporal continuity, vehicle payload limits, inter-trip reloading, and maximum shift durations. Furthermore, it provides an in-depth review of the state of the art in multi-trip routing, flexible and collaborative multi-depot systems, and the Variable Neighborhood Search (VNS) metaheuristic framework. This work establishes the formal mathematical foundation and algorithmic roadmap for subsequent computational benchmarking and metaheuristic implementation.
+\end{abstract}
+
+\begin{IEEEkeywords}
+Vehicle Routing Problem, Multi-Trip Operations, Flexible Depot Assignment, Mixed-Integer Linear Programming, Variable Neighborhood Search.
+\end{IEEEkeywords}
+
+\section{Introduction}
+Freight distribution in mordern cities is increasingly shaped by last-mile delivery demands. In high-density urban areas, customer orders are typically small, frequent, and subject to stric timelines. At the same time, logistics providers often rely on smaller electric vehicles or light commercial vans due to local acces restrictions and traffic congestions. While these vehicles are agile, their limited payload capacity ($Q$) introduces a key operational bottleneck: a van often fills up and completes its deliveries long before the driver's work shift ($T_{max}$) ends.\\
+In classical routing models, such as the Capacitated Vehicle Routing Problem (CVRP), each vehicle executes a single route starting and ending at a single base facility \cite{cordeau1997tabu}. Applying this restriction to urban parcel delivery creates severe inefficiencies, as vehicles sit idle once their initial capacity is discharged. The Multi-Trip Vehicle Routing Problem (MTVRP) addresses this issue by allowing vehicles to perform multiple sequential delivery routes within a single shift returning to a depot to reload whenever capacity is exhausted \cite{taillard1996vehicle, cattaruzza2018survey}.\\
+However, multi-trip capabilities alone do not fully solve urban distribution challenges when a network contains multiple facilities. Standar Multi-Depot VRP (MDVRP) models assign vehicles permanently to a home depot \cite{cordeau1997tabu}. if a vehicle finishes a delivery route far from its home depot but near another fulfillment hub, forcing it to travel all the way back to its origin generates substantial empty travel distance (inefficient/deadhead mileage). Allowing \textit{flexible depot assignment} solves this inefficiency: a vehicle can conclude a trip at depot $d_1$, reload cargo at $d_1$, and immediately launch its next trip from that location \cite{crevier2007multi, li2026multidepot}.\\
+Combining these two operational strategies produces the Flexible-depot Multi-trip Vehicle Routing Problem (FDMVRP). From an optimization point, the FDMVRP is strongly NP-hard. It couples spatial route sequencing with temporal scheduling and bin packing, requiring trips of varying lengths to be arranged seamlessly acrros a fleet within driver shift limits while maintaining spatial continuity between successive facilities.\\
+This report serves three primary objectives: 
+\begin{enumerate}
+    \item To examine the current literature across multi-trip routing, flexible inter-depots logistics, and Variable Neighborhoods Search (VNS) metaheuristics.
+    \item To formulate a comprehensive Mixed-Integer Linear Programming (MILP) model for the FDMVRP using trip-indexed variables that rigorously capture customer coverage, payload limits, inter-facility transitions, reloading times, and maximum shift durations.
+    \item To design a Variable Neighborhood Search framework capable of handling industrial-scale problem instances in future project stages.\\
+\end{enumerate}
+The rest of this document is organized as follows. Section II reviews the academic state of the art. Section III presents the mathematical formulation. Section IV details the proposed VNS algorithmic architecture. Finally, Section V concludes the report.
+
+\section{State of the Art}
+The Flexible-depot Multi-Trip Vehicle Routing Problem (FDMVRP) combines three core logistical operational dimensions: multi-trip scheduling, flexible inter-depot replenishment, and metaheuristic optimizatoin. This section reviews four foundational and state-of-the-art studies that address these specific features.
+
+\subsection{Multi-Trip Foundations - Taillard, Laporte, and Gendrau (1996).}
+
+\subsubsection{Technique Used}
+The autors developed a trajectory-based hybrid metaheuristic for the Multi-Trip Vehicle Routing Problem (MTVRP) \cite{taillard1996vehicle}. The methodology combines a Tabu Search algorithm for route generation with a Set Partitioning / Bin Packing optimization formulation.
+
+\subsubsection{Main Components and Objectives}
+\begin{itemize}
+    \item \textbf{\textit{Route Generation Phase (Tabu Search):}} Generates a large collection of candidate individual delivery routes while temporarily ignoring maximum shift duration limits. \textbf{\textit{Objective:}} To thorougly explore the spatial routing space and discover low-cost customer visit sequences.
+    \item \textbf{\textit{Trip Scheduling and Bin Packing Phase:}} Formulates the assignment of routes to physical vehicles as a Minimun Weight Bin Packing Problem \cite{taillard1996vehicle}. \textbf{\textit{Objective:}} To sequence and pack individual routes into distinc vehicle shifts without violating maximum daily working hours or driver shift limits ($T_{max}$).
+\end{itemize}
+
+\subsubsection{Instances Used and Characteristics}
+The framework was evaluated on 14 classic benchmark datasets adapted from Christofides et al., ranging from 50 to 199 customers served from a central depot \cite{taillard1996vehicle}. The authors modified these instances by adding tight maximum driving time bounds ($T_{max}$) to force vehicles to perform up to 4 trips per shift within the planning horizon.
+
+\subsubsection{Results and Conclusions}
+The study proved that allowing vehicles to execute multiple trips per shift signicantly reduces fleet acquisition costs and eliminates unutilized capacity \cite{taillard1996vehicle}. A key conclusion was that temporal bin-packing constraints dominate solution feasibility in multi-trip routing, meaning standard single-trip VRP operators are insufficient unless paired with explicit trip-level scheduling.
+
+\subsection{Inter-Depot Flexible Replenishmet - Crevier, Cordeau, and Laporte (2007).}
+
+\subsubsection{Technique Used}
+The authors formalized the Multi-Depot Vehicle Routing Problem with Inter-Depot Routes (MDVRPI) \cite{crevier2007multi}. They proposed a matheuristic (hybrid metaheuristic) integrating Adaptative Memory Programming, Tabu Search, and Integer Programming. 
+
+\subsubsection{Main Components and Objectives}
+\begin{itemize}
+    \item \textbf{\textit{Adaptive Memory Matrix:}} Maintains a dynamic pool of high-quality route segments extracted from top-performing solutions. \textbf{\textit{Objective:}} To encourage search diversification by recombining promising sub-routes across different facilities.
+
+    \item \textbf{\textit{Tabu Search Local Search Module:}} Executes neighborhood moves (relocate, swap, 2-opt) while permitting vehicles to insert intermediate facility visits when vehicle capacity is depleted. \textbf{\textit{Objective:}} To explore local solution spaces and dynamically determine inter-depot reloading locations.
+
+    \item \textbf{\textit{Set Partitioning Subproblem:}} Solves an Integer Program over the stored route pool.\textbf{\textit{Objective:}} To assemble globally optimal combinations of routes and facility transtions.
+\end{itemize}
+
+\subsubsection{Instances Used and Characteristics}
+\section*{Acknowledgment}
+
+The preferred spelling of the word ``acknowledgment'' in America is without 
+an ``e'' after the ``g''. Avoid the stilted expression ``one of us (R. B. 
+G.) thanks $\ldots$''. Instead, try ``R. B. G. thanks$\ldots$''. Put sponsor 
+acknowledgments in the unnumbered footnote on the first page.
+
+\section*{References}
+
+Please number citations consecutively within brackets \cite{b1}. The 
+sentence punctuation follows the bracket \cite{b2}. Refer simply to the reference 
+number, as in \cite{b3}---do not use ``Ref. \cite{b3}'' or ``reference \cite{b3}'' except at 
+the beginning of a sentence: ``Reference \cite{b3} was the first $\ldots$''
+
+Number footnotes separately in superscripts. Place the actual footnote at 
+the bottom of the column in which it was cited. Do not put footnotes in the 
+abstract or reference list. Use letters for table footnotes.
+
+Unless there are six authors or more give all authors' names; do not use 
+``et al.''. Papers that have not been published, even if they have been 
+submitted for publication, should be cited as ``unpublished'' \cite{b4}. Papers 
+that have been accepted for publication should be cited as ``in press'' \cite{b5}. 
+Capitalize only the first word in a paper title, except for proper nouns and 
+element symbols.
+
+For papers published in translation journals, please give the English 
+citation first, followed by the original foreign-language citation \cite{b6}.
+
+\bibliographystyle{IEEEtran}
+\bibliography{references}
+\vspace{12pt}
+
+\end{document}
